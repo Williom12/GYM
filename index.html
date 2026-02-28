@@ -2,46 +2,70 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>GYM</title>
-
-<link rel="manifest" href="manifest.json">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 body{
-background:#000;
-color:#fff;
-font-family:Arial;
 margin:0;
+font-family:system-ui;
+background:#000;
+color:white;
 }
 
+/* HEADER */
 header{
-background:#111;
+background:#0b0b0b;
 text-align:center;
-padding:15px;
-font-size:22px;
-font-weight:bold;
-letter-spacing:2px;
+padding:18px;
+font-size:24px;
+font-weight:700;
+letter-spacing:3px;
+box-shadow:0 2px 10px rgba(0,0,0,.6);
 }
 
+/* PERFIL CENTER */
+#perfil{
+height:80vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+gap:20px;
+}
+
+.perfilBtn{
+width:220px;
+padding:15px;
+font-size:18px;
+background:#111;
+border-radius:12px;
+border:1px solid #333;
+transition:.2s;
+}
+
+.perfilBtn:hover{
+background:#1a1a1a;
+transform:scale(1.05);
+}
+
+/* MENU */
 .menu{
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
 gap:8px;
+padding:12px;
 background:#111;
-padding:10px;
 }
 
-button{
-background:#222;
-color:white;
-border:none;
+.menu button{
+background:#1b1b1b;
+border-radius:10px;
 padding:10px 14px;
-border-radius:8px;
-cursor:pointer;
 }
 
 .container{
@@ -51,24 +75,45 @@ padding:20px;
 }
 
 input{
-background:#111;
-border:1px solid #444;
+background:#0f0f0f;
+border:1px solid #333;
 color:white;
 padding:6px;
-width:70px;
-margin:4px;
+width:75px;
 border-radius:6px;
+margin:5px;
 }
 
 .card{
 background:#111;
+border-radius:14px;
 padding:15px;
-border-radius:10px;
-margin:10px 0;
+margin:12px 0;
+box-shadow:0 0 10px rgba(0,0,0,.5);
+}
+
+.pr{
+color:#00ff9f;
+font-weight:bold;
+margin-left:8px;
 }
 
 .hidden{display:none}
-.pr{color:#00ff88;font-weight:bold}
+
+button{
+cursor:pointer;
+color:white;
+border:none;
+}
+
+.saveBtn{
+margin-top:15px;
+background:#00aa66;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+}
+
 </style>
 </head>
 
@@ -76,28 +121,33 @@ margin:10px 0;
 
 <header>GYM 💪</header>
 
-<div id="perfil" class="container">
-<h2>Selecciona perfil</h2>
-<button onclick="setPerfil('William')">William</button>
-<button onclick="setPerfil('JuanManuel')">Juan Manuel</button>
+<!-- PERFIL -->
+<div id="perfil">
+<h2>Selecciona Perfil</h2>
+<button class="perfilBtn" onclick="setPerfil('William')">William</button>
+<button class="perfilBtn" onclick="setPerfil('JuanManuel')">Juan Manuel</button>
 </div>
 
 <div id="menu" class="menu hidden">
-<button onclick="dia(1)">D1</button>
-<button onclick="dia(2)">D2</button>
-<button onclick="dia(3)">D3</button>
-<button onclick="dia(4)">D4</button>
-<button onclick="dia(5)">D5</button>
+<button onclick="abrirDia(1)">D1</button>
+<button onclick="abrirDia(2)">D2</button>
+<button onclick="abrirDia(3)">D3</button>
+<button onclick="abrirDia(4)">D4</button>
+<button onclick="abrirDia(5)">D5</button>
 <button onclick="historial()">Historial</button>
 <button onclick="progreso()">Progreso</button>
-<button onclick="calendario()">Calendario</button>
 </div>
 
 <div id="app" class="container"></div>
 
 <script>
 
-let perfil="";
+/* ---------- ESTADO ---------- */
+
+let perfilActual="";
+let diaActual=null;
+
+/* ---------- RUTINA ---------- */
 
 const rutina={
 1:["Press inclinado","Fondos","Aperturas","Press cerrado","Extensión tríceps"],
@@ -107,105 +157,132 @@ const rutina={
 5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión"]
 };
 
+/* ---------- PERFIL ---------- */
+
 function setPerfil(p){
-perfil=p;
-document.getElementById("perfil").classList.add("hidden");
-document.getElementById("menu").classList.remove("hidden");
+perfilActual=p;
+perfil.classList.add("hidden");
+menu.classList.remove("hidden");
 }
 
-const key=d=>perfil+"_dia"+d;
+/* ---------- STORAGE KEY ---------- */
 
-function limpiar(){ app.innerHTML=""; }
+function key(d){
+return `${perfilActual}_dia_${d}`;
+}
 
-function dia(n){
+/* ---------- ABRIR DIA ---------- */
 
-limpiar();
+function abrirDia(d){
 
-let html=`<h2>Dia ${n} <input type="date" id="fecha"></h2>`;
+diaActual=d;
 
-rutina[n].forEach((e,i)=>{
-html+=`${e}
-<input id="kg${i}" placeholder="KG">
-Reps <input id="rep${i}">
-<span id="pr${i}" class="pr"></span><br>`;
+let html=`<h2>Dia ${d}
+<input type="date" id="fecha_${d}">
+</h2>`;
+
+rutina[d].forEach((ej,i)=>{
+html+=`
+<div class="card">
+${ej}<br>
+KG <input id="kg_${d}_${i}">
+Reps <input id="rep_${d}_${i}">
+<span id="pr_${d}_${i}" class="pr"></span>
+</div>`;
 });
 
-html+=`<br><button onclick="guardar(${n})">Guardar</button>`;
+html+=`<button class="saveBtn" onclick="guardarDia()">Guardar</button>`;
 
 app.innerHTML=html;
 
-cargar(n);
-mostrarPR(n);
+cargarDia(d);
+mostrarPR(d);
 }
 
-function guardar(n){
+/* ---------- GUARDAR ---------- */
+
+function guardarDia(){
+
+let d=diaActual;
 
 let data={
-fecha:fecha.value,
-ej:[]
+fecha:document.getElementById(`fecha_${d}`).value,
+ejercicios:[]
 };
 
-rutina[n].forEach((_,i)=>{
-data.ej.push({
-kg:Number(document.getElementById("kg"+i).value)||0,
-rep:document.getElementById("rep"+i).value
-});
+rutina[d].forEach((_,i)=>{
+
+data.ejercicios.push({
+kg:Number(document.getElementById(`kg_${d}_${i}`).value)||0,
+rep:document.getElementById(`rep_${d}_${i}`).value
 });
 
-localStorage.setItem(key(n),JSON.stringify(data));
+});
+
+localStorage.setItem(key(d),JSON.stringify(data));
+
 alert("Guardado ✅");
 }
 
-function cargar(n){
-let d=localStorage.getItem(key(n));
-if(!d)return;
-d=JSON.parse(d);
+/* ---------- CARGAR ---------- */
 
-fecha.value=d.fecha;
+function cargarDia(d){
 
-d.ej.forEach((e,i)=>{
-kg=i;
-document.getElementById("kg"+i).value=e.kg;
-document.getElementById("rep"+i).value=e.rep;
+let info=localStorage.getItem(key(d));
+if(!info)return;
+
+info=JSON.parse(info);
+
+document.getElementById(`fecha_${d}`).value=info.fecha;
+
+info.ejercicios.forEach((e,i)=>{
+document.getElementById(`kg_${d}_${i}`).value=e.kg;
+document.getElementById(`rep_${d}_${i}`).value=e.rep;
 });
 }
 
-function mostrarPR(n){
+/* ---------- PR ---------- */
 
-rutina[n].forEach((_,i)=>{
+function mostrarPR(d){
+
+rutina[d].forEach((_,i)=>{
 
 let max=0;
 
-for(let d=1;d<=5;d++){
-let data=localStorage.getItem(key(d));
+for(let x=1;x<=5;x++){
+let data=localStorage.getItem(key(x));
 if(data){
 data=JSON.parse(data);
-if(data.ej[i])
-max=Math.max(max,data.ej[i].kg);
+if(data.ejercicios[i])
+max=Math.max(max,data.ejercicios[i].kg);
 }
 }
 
 if(max>0)
-document.getElementById("pr"+i).innerText="🏆 "+max+"kg";
+document.getElementById(`pr_${d}_${i}`).textContent=`🏆 ${max}kg`;
+
 });
 }
 
+/* ---------- HISTORIAL ---------- */
+
 function historial(){
 
-limpiar();
 let html="<h2>Historial</h2>";
 
-for(let i=1;i<=5;i++){
-let d=localStorage.getItem(key(i));
-if(d){
-d=JSON.parse(d);
+for(let d=1;d<=5;d++){
+
+let data=localStorage.getItem(key(d));
+
+if(data){
+data=JSON.parse(data);
 
 html+=`
 <div class="card">
-Dia ${i}<br>
-Fecha: ${d.fecha}<br><br>
-<button onclick="dia(${i})">Abrir</button>
-<button onclick="eliminar(${i})">Eliminar</button>
+Dia ${d}<br>
+Fecha: ${data.fecha}<br><br>
+<button onclick="abrirDia(${d})">Abrir</button>
+<button onclick="eliminarDia(${d})">Eliminar</button>
 </div>`;
 }
 }
@@ -213,41 +290,45 @@ Fecha: ${d.fecha}<br><br>
 app.innerHTML=html;
 }
 
-function eliminar(n){
+function eliminarDia(d){
 if(confirm("Eliminar día?")){
-localStorage.removeItem(key(n));
+localStorage.removeItem(key(d));
 historial();
 }
 }
 
-/* -------- GRAFICO GENERAL -------- */
+/* ---------- GRAFICO ---------- */
 
 function progreso(){
-
-limpiar();
 
 app.innerHTML=`<h2>Progreso 📈</h2><canvas id="chart"></canvas>`;
 
 let labels=[];
-let data=[];
+let valores=[];
 
 for(let d=1;d<=5;d++){
-let info=localStorage.getItem(key(d));
-if(info){
-info=JSON.parse(info);
+let data=localStorage.getItem(key(d));
+if(data){
+data=JSON.parse(data);
 
 let total=0;
-info.ej.forEach(e=>total+=e.kg);
+data.ejercicios.forEach(e=>total+=e.kg);
 
 labels.push("Dia "+d);
-data.push(total);
+valores.push(total);
 }
 }
 
 new Chart(chart,{
-type:'line',
-data:{labels,
-datasets:[{label:"Peso total (kg)",data,tension:.3}]},
+type:"line",
+data:{
+labels,
+datasets:[{
+label:"Peso total",
+data:valores,
+tension:.3
+}]
+},
 options:{
 plugins:{legend:{labels:{color:"white"}}},
 scales:{
@@ -256,29 +337,6 @@ y:{ticks:{color:"white"}}
 }
 }
 });
-}
-
-/* -------- CALENDARIO -------- */
-
-function calendario(){
-
-limpiar();
-let html="<h2>Calendario 📅</h2>";
-
-for(let d=1;d<=5;d++){
-let info=localStorage.getItem(key(d));
-if(info){
-info=JSON.parse(info);
-html+=`<div class="card">${info.fecha} — Dia ${d}</div>`;
-}
-}
-
-app.innerHTML=html;
-}
-
-/* PWA */
-if("serviceWorker" in navigator){
-navigator.serviceWorker.register("sw.js");
 }
 
 </script>
