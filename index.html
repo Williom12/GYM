@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Rutina Gym</title>
+
+<style>
+body{
+    background:black;
+    color:white;
+    font-family:Arial, sans-serif;
+    margin:0;
+}
+
+.menu{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:15px;
+    background:#111;
+    position:sticky;
+    top:0;
+}
+
+button{
+    background:#222;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    cursor:pointer;
+    border-radius:6px;
+}
+
+button:hover{
+    background:#444;
+}
+
+.container{
+    padding:25px;
+    max-width:700px;
+    margin:auto;
+}
+
+input{
+    background:#111;
+    border:1px solid #555;
+    color:white;
+    padding:5px;
+    width:70px;
+    margin:5px;
+}
+
+.hidden{
+    display:none;
+}
+
+.card{
+    background:#111;
+    padding:15px;
+    margin:10px 0;
+    border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="menu">
+<button onclick="mostrarDia(1)">Dia 1</button>
+<button onclick="mostrarDia(2)">Dia 2</button>
+<button onclick="mostrarDia(3)">Dia 3</button>
+<button onclick="mostrarDia(4)">Dia 4</button>
+<button onclick="mostrarDia(5)">Dia 5</button>
+<button onclick="mostrarDias()">Dias</button>
+</div>
+
+<div class="container">
+
+<!-- DIA 1 -->
+<div id="dia1" class="hidden">
+<h2>Dia 1 <input type="date" id="fecha1"></h2>
+
+<p>Press inclinado con mancuernas 
+<input id="d1e1kg" placeholder="KG"> 
+Reps <input id="d1e1rep"></p>
+
+<p>Fondos en paralelas 
+<input id="d1e2kg" placeholder="KG"> 
+Reps <input id="d1e2rep"></p>
+
+<p>Aperturas con mancuernas 
+<input id="d1e3kg" placeholder="KG"> 
+Reps <input id="d1e3rep"></p>
+
+<p>Press cerrado 
+<input id="d1e4kg" placeholder="KG"> 
+Reps <input id="d1e4rep"></p>
+
+<p>Extensión de tríceps en polea 
+<input id="d1e5kg" placeholder="KG"> 
+Reps <input id="d1e5rep"></p>
+
+<button onclick="guardarDia(1)">Guardar</button>
+</div>
+
+
+<!-- PANEL DIAS -->
+<div id="dias" class="hidden">
+<h2>Historial de días</h2>
+<div id="listaDias"></div>
+</div>
+
+</div>
+
+<script>
+
+function ocultarTodo(){
+    document.querySelectorAll(".container > div")
+    .forEach(d=>d.classList.add("hidden"));
+}
+
+function mostrarDia(n){
+    ocultarTodo();
+    document.getElementById("dia"+n).classList.remove("hidden");
+    cargarDia(n);
+}
+
+function guardarDia(n){
+
+    let datos = {
+        fecha: document.getElementById("fecha"+n).value,
+        ejercicios:[]
+    };
+
+    for(let i=1;i<=5;i++){
+        let kg=document.getElementById(`d${n}e${i}kg`);
+        let rep=document.getElementById(`d${n}e${i}rep`);
+        if(kg && rep){
+            datos.ejercicios.push({
+                kg:kg.value,
+                rep:rep.value
+            });
+        }
+    }
+
+    localStorage.setItem("dia"+n, JSON.stringify(datos));
+    alert("Guardado ✅");
+}
+
+function cargarDia(n){
+    let datos=localStorage.getItem("dia"+n);
+    if(!datos) return;
+
+    datos=JSON.parse(datos);
+
+    document.getElementById("fecha"+n).value=datos.fecha;
+
+    datos.ejercicios.forEach((e,i)=>{
+        let kg=document.getElementById(`d${n}e${i+1}kg`);
+        let rep=document.getElementById(`d${n}e${i+1}rep`);
+        if(kg) kg.value=e.kg;
+        if(rep) rep.value=e.rep;
+    });
+}
+
+function mostrarDias(){
+    ocultarTodo();
+    document.getElementById("dias").classList.remove("hidden");
+
+    let lista=document.getElementById("listaDias");
+    lista.innerHTML="";
+
+    for(let i=1;i<=5;i++){
+        let datos=localStorage.getItem("dia"+i);
+        if(datos){
+            datos=JSON.parse(datos);
+
+            let div=document.createElement("div");
+            div.className="card";
+            div.innerHTML=`<b>Dia ${i}</b><br>Fecha: ${datos.fecha}`;
+            lista.appendChild(div);
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>
