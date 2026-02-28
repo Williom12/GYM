@@ -6,129 +6,163 @@
 <title>GYM</title>
 
 <style>
+
 body{
     margin:0;
     font-family:Arial, Helvetica, sans-serif;
-    background:#000;
+    background:black;
     color:white;
 }
 
-.screen{
+/* PANTALLAS */
+.pantalla{
     display:none;
+    min-height:100vh;
     padding:20px;
 }
 
-.active{
+.activa{
     display:block;
+}
+
+/* CENTRAR PERFIL */
+.center{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    height:100vh;
 }
 
 h1,h2{
     text-align:center;
 }
 
+/* BOTONES */
+
 button{
     background:#111;
-    color:white;
     border:1px solid #333;
-    padding:12px;
-    margin:6px;
-    width:90%;
-    max-width:400px;
-    cursor:pointer;
+    color:white;
+    padding:14px;
+    margin:8px;
+    width:220px;
+    border-radius:10px;
     font-size:16px;
+    cursor:pointer;
 }
 
 button:hover{
     background:#1f1f1f;
 }
 
-.center{
-    height:100vh;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-}
+/* INPUTS */
 
 input{
-    width:60px;
-    background:#111;
-    border:1px solid #333;
+    width:80px;
+    background:#000;
+    border:1px solid #444;
     color:white;
-    padding:5px;
-    margin-left:5px;
+    padding:6px;
+    border-radius:6px;
+    text-align:center;
 }
 
-.exercise{
-    margin:12px 0;
-    border-bottom:1px solid #222;
-    padding-bottom:8px;
+/* MENU */
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:30px;
 }
 
-.card{
+/* EJERCICIOS */
+
+.ejercicio{
+    margin:15px 0;
+}
+
+/* LISTA DIAS */
+
+.registro{
     border:1px solid #333;
-    padding:10px;
-    margin:10px auto;
-    max-width:400px;
+    padding:12px;
+    margin:10px;
+    border-radius:10px;
 }
 
-.topBtn{
-    width:auto;
-    padding:8px 12px;
+.eliminar{
+    background:#550000;
 }
+
+.guardar{
+    background:#004400;
+}
+
+.volver{
+    background:#222;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- PERFIL -->
-<div id="profiles" class="screen active center">
+<!-- ================= PERFIL ================= -->
+
+<div id="perfil" class="pantalla activa center">
     <h1>GYM</h1>
     <h2>Selecciona Perfil</h2>
-    <button onclick="selectProfile('William')">William</button>
-    <button onclick="selectProfile('Juan Manuel')">Juan Manuel</button>
+
+    <button onclick="seleccionarPerfil('William')">William</button>
+    <button onclick="seleccionarPerfil('Juan Manuel')">Juan Manuel</button>
 </div>
 
-<!-- MENU -->
-<div id="menu" class="screen center">
-    <h2 id="profileName"></h2>
+<!-- ================= MENU ================= -->
 
-    <button onclick="openDay(1)">Día 1</button>
-    <button onclick="openDay(2)">Día 2</button>
-    <button onclick="openDay(3)">Día 3</button>
-    <button onclick="openDay(4)">Día 4</button>
-    <button onclick="openDay(5)">Día 5</button>
+<div id="menu" class="pantalla center">
+    <h2 id="nombrePerfil"></h2>
 
-    <button onclick="showDays()">Días Guardados</button>
+    <div class="menu">
+        <button onclick="abrirDia(1)">Día 1</button>
+        <button onclick="abrirDia(2)">Día 2</button>
+        <button onclick="abrirDia(3)">Día 3</button>
+        <button onclick="abrirDia(4)">Día 4</button>
+        <button onclick="abrirDia(5)">Día 5</button>
+        <button onclick="mostrarDias()">Días</button>
+    </div>
 </div>
 
-<!-- DIA -->
-<div id="dayScreen" class="screen">
-    <button class="topBtn" onclick="goMenu()">← Volver</button>
-    <h2 id="dayTitle"></h2>
+<!-- ================= DIA ================= -->
 
-    Fecha:
-    <input type="date" id="fecha">
+<div id="dia" class="pantalla">
+    <h2 id="tituloDia"></h2>
+    <p>Fecha: <input type="date" id="fecha"></p>
 
-    <div id="exercises"></div>
+    <div id="ejercicios"></div>
 
     <br>
-    <button onclick="saveDay()">Guardar Día</button>
+    <button class="guardar" onclick="guardarDia()">Guardar</button>
+    <button class="volver" onclick="irMenu()">Volver</button>
 </div>
 
-<!-- HISTORIAL -->
-<div id="daysList" class="screen">
-    <button class="topBtn" onclick="goMenu()">← Volver</button>
+<!-- ================= HISTORIAL ================= -->
+
+<div id="diasGuardados" class="pantalla">
     <h2>Días Guardados</h2>
-    <div id="savedDays"></div>
+    <div id="listaDias"></div>
+    <button class="volver" onclick="irMenu()">Volver</button>
 </div>
 
 <script>
 
-let currentProfile=null;
-let currentDay=null;
+let perfilActual="";
+let diaActual=0;
 
-const routines={
+/* EJERCICIOS */
+
+const rutina={
 1:[
 "Press inclinado con mancuernas",
 "Fondos en paralelas",
@@ -166,106 +200,110 @@ const routines={
 ]
 };
 
-function changeScreen(id){
-    document.querySelectorAll(".screen")
-    .forEach(s=>s.classList.remove("active"));
+/* CAMBIO DE PANTALLA */
 
-    document.getElementById(id).classList.add("active");
+function mostrar(id){
+document.querySelectorAll(".pantalla")
+.forEach(p=>p.classList.remove("activa"));
+
+document.getElementById(id).classList.add("activa");
 }
 
-function selectProfile(name){
-    currentProfile=name;
-    document.getElementById("profileName").innerText="Perfil: "+name;
-    changeScreen("menu");
+/* PERFIL */
+
+function seleccionarPerfil(nombre){
+perfilActual=nombre;
+document.getElementById("nombrePerfil").innerText="Perfil: "+nombre;
+mostrar("menu");
 }
 
-function goMenu(){
-    changeScreen("menu");
+/* MENU */
+
+function irMenu(){
+mostrar("menu");
 }
 
-function openDay(day){
-    currentDay=day;
+/* ABRIR DIA */
 
-    document.getElementById("dayTitle").innerText=
-    "Día "+day;
+function abrirDia(n){
+diaActual=n;
+document.getElementById("tituloDia").innerText=`Día ${n}`;
 
-    const container=document.getElementById("exercises");
-    container.innerHTML="";
+const cont=document.getElementById("ejercicios");
+cont.innerHTML="";
 
-    routines[day].forEach((ex,i)=>{
-        container.innerHTML+=`
-        <div class="exercise">
-            ${ex}
-            <br>
-            KG <input type="number" id="kg${i}">
-            Reps <input type="number" id="rep${i}">
-        </div>`;
-    });
+rutina[n].forEach((ej,i)=>{
+cont.innerHTML+=`
+<div class="ejercicio">
+${ej}<br>
+KG <input id="kg${i}">
+Reps <input id="rep${i}">
+</div>`;
+});
 
-    changeScreen("dayScreen");
+mostrar("dia");
 }
 
-function saveDay(){
+/* GUARDAR */
 
-    const fecha=document.getElementById("fecha").value;
-    if(!fecha){ alert("Pon una fecha"); return;}
+function guardarDia(){
 
-    let data=[];
+let datos={
+perfil:perfilActual,
+dia:diaActual,
+fecha:document.getElementById("fecha").value,
+ejercicios:[]
+};
 
-    routines[currentDay].forEach((ex,i)=>{
-        data.push({
-            ejercicio:ex,
-            kg:document.getElementById("kg"+i).value,
-            reps:document.getElementById("rep"+i).value
-        });
-    });
+rutina[diaActual].forEach((ej,i)=>{
+datos.ejercicios.push({
+nombre:ej,
+kg:document.getElementById(`kg${i}`).value,
+reps:document.getElementById(`rep${i}`).value
+});
+});
 
-    let storage=
-    JSON.parse(localStorage.getItem(currentProfile)||"[]");
+let historial=JSON.parse(localStorage.getItem("gymDatos"))||[];
+historial.push(datos);
+localStorage.setItem("gymDatos",JSON.stringify(historial));
 
-    storage.push({
-        dia:currentDay,
-        fecha:fecha,
-        datos:data
-    });
-
-    localStorage.setItem(currentProfile,JSON.stringify(storage));
-
-    alert("Día guardado ✅");
+alert("Día guardado ✅");
+irMenu();
 }
 
-function showDays(){
+/* MOSTRAR DIAS */
 
-    changeScreen("daysList");
+function mostrarDias(){
 
-    let container=document.getElementById("savedDays");
-    container.innerHTML="";
+let lista=document.getElementById("listaDias");
+lista.innerHTML="";
 
-    let storage=
-    JSON.parse(localStorage.getItem(currentProfile)||"[]");
+let historial=JSON.parse(localStorage.getItem("gymDatos"))||[];
 
-    storage.forEach((d,index)=>{
-        container.innerHTML+=`
-        <div class="card">
-        Día ${d.dia} — ${d.fecha}
-        <br><br>
-        <button onclick="deleteDay(${index})">
-        Eliminar
-        </button>
-        </div>`;
-    });
+historial
+.filter(d=>d.perfil===perfilActual)
+.forEach((d,index)=>{
+
+lista.innerHTML+=`
+<div class="registro">
+<b>Día ${d.dia}</b><br>
+Fecha: ${d.fecha}<br><br>
+<button class="eliminar" onclick="eliminarDia(${index})">
+Eliminar
+</button>
+</div>`;
+});
+
+mostrar("diasGuardados");
 }
 
-function deleteDay(index){
+/* ELIMINAR */
 
-    let storage=
-    JSON.parse(localStorage.getItem(currentProfile)||"[]");
-
-    storage.splice(index,1);
-
-    localStorage.setItem(currentProfile,JSON.stringify(storage));
-
-    showDays();
+function eliminarDia(i){
+let historial=JSON.parse(localStorage.getItem("gymDatos"))||[];
+historial.splice(i,1);
+localStorage.setItem("gymDatos",JSON.stringify(historial));
+mostrarDias();
 }
 
 </script>
