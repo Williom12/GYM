@@ -8,7 +8,7 @@
 body{
     background:black;
     color:white;
-    font-family:Arial, sans-serif;
+    font-family:Arial;
     margin:0;
 }
 
@@ -18,27 +18,23 @@ body{
     gap:10px;
     padding:15px;
     background:#111;
-    position:sticky;
-    top:0;
 }
 
 button{
     background:#222;
     color:white;
     border:none;
-    padding:10px 18px;
+    padding:10px 15px;
     cursor:pointer;
     border-radius:6px;
 }
 
-button:hover{
-    background:#444;
-}
+button:hover{ background:#444; }
 
 .container{
-    padding:25px;
-    max-width:700px;
+    max-width:800px;
     margin:auto;
+    padding:20px;
 }
 
 input{
@@ -50,9 +46,7 @@ input{
     margin:5px;
 }
 
-.hidden{
-    display:none;
-}
+.hidden{ display:none; }
 
 .card{
     background:#111;
@@ -65,7 +59,15 @@ input{
 
 <body>
 
-<div class="menu">
+<!-- PERFIL -->
+<div id="perfilSelect" class="container">
+<h2>Selecciona perfil</h2>
+<button onclick="seleccionarPerfil('William')">William</button>
+<button onclick="seleccionarPerfil('JuanManuel')">Juan Manuel</button>
+</div>
+
+<!-- MENU -->
+<div id="menu" class="menu hidden">
 <button onclick="mostrarDia(1)">Dia 1</button>
 <button onclick="mostrarDia(2)">Dia 2</button>
 <button onclick="mostrarDia(3)">Dia 3</button>
@@ -74,112 +76,129 @@ input{
 <button onclick="mostrarDias()">Dias</button>
 </div>
 
-<div class="container">
-
-<!-- DIA 1 -->
-<div id="dia1" class="hidden">
-<h2>Dia 1 <input type="date" id="fecha1"></h2>
-
-<p>Press inclinado con mancuernas 
-<input id="d1e1kg" placeholder="KG"> 
-Reps <input id="d1e1rep"></p>
-
-<p>Fondos en paralelas 
-<input id="d1e2kg" placeholder="KG"> 
-Reps <input id="d1e2rep"></p>
-
-<p>Aperturas con mancuernas 
-<input id="d1e3kg" placeholder="KG"> 
-Reps <input id="d1e3rep"></p>
-
-<p>Press cerrado 
-<input id="d1e4kg" placeholder="KG"> 
-Reps <input id="d1e4rep"></p>
-
-<p>Extensión de tríceps en polea 
-<input id="d1e5kg" placeholder="KG"> 
-Reps <input id="d1e5rep"></p>
-
-<button onclick="guardarDia(1)">Guardar</button>
-</div>
-
-
-<!-- PANEL DIAS -->
-<div id="dias" class="hidden">
-<h2>Historial de días</h2>
-<div id="listaDias"></div>
-</div>
-
-</div>
+<div class="container" id="contenido"></div>
 
 <script>
 
+let perfil="";
+
+/* ---------- PERFIL ---------- */
+
+function seleccionarPerfil(p){
+    perfil=p;
+    document.getElementById("perfilSelect").classList.add("hidden");
+    document.getElementById("menu").classList.remove("hidden");
+}
+
+/* ---------- EJERCICIOS ---------- */
+
+const rutina={
+1:["Press inclinado mancuernas","Fondos en paralelas","Aperturas mancuernas","Press cerrado","Extensión tríceps polea"],
+2:["Dominadas","Remo con barra","Jalón al pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
+3:["Sentadilla libre","Prensa","Curl femoral","Extensión cuádriceps","Gemelos de pie"],
+4:["Press militar","Elevaciones laterales","Elevaciones posteriores","Encogimientos barra","Crunch con peso"],
+5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión superserie"]
+};
+
+/* ---------- UI ---------- */
+
 function ocultarTodo(){
-    document.querySelectorAll(".container > div")
-    .forEach(d=>d.classList.add("hidden"));
+    document.getElementById("contenido").innerHTML="";
 }
 
 function mostrarDia(n){
     ocultarTodo();
-    document.getElementById("dia"+n).classList.remove("hidden");
+
+    let html=`<h2>Dia ${n} <input type="date" id="fecha"></h2>`;
+
+    rutina[n].forEach((e,i)=>{
+        html+=`
+        <p>${e}
+        <input id="kg${i}" placeholder="KG">
+        Reps <input id="rep${i}">
+        </p>`;
+    });
+
+    html+=`<button onclick="guardarDia(${n})">Guardar</button>`;
+
+    document.getElementById("contenido").innerHTML=html;
+
     cargarDia(n);
+}
+
+/* ---------- GUARDAR ---------- */
+
+function keyDia(n){
+    return perfil+"_dia"+n;
 }
 
 function guardarDia(n){
 
-    let datos = {
-        fecha: document.getElementById("fecha"+n).value,
+    let datos={
+        fecha:document.getElementById("fecha").value,
         ejercicios:[]
     };
 
-    for(let i=1;i<=5;i++){
-        let kg=document.getElementById(`d${n}e${i}kg`);
-        let rep=document.getElementById(`d${n}e${i}rep`);
-        if(kg && rep){
-            datos.ejercicios.push({
-                kg:kg.value,
-                rep:rep.value
-            });
-        }
-    }
+    rutina[n].forEach((_,i)=>{
+        datos.ejercicios.push({
+            kg:document.getElementById("kg"+i).value,
+            rep:document.getElementById("rep"+i).value
+        });
+    });
 
-    localStorage.setItem("dia"+n, JSON.stringify(datos));
+    localStorage.setItem(keyDia(n),JSON.stringify(datos));
     alert("Guardado ✅");
 }
 
 function cargarDia(n){
-    let datos=localStorage.getItem("dia"+n);
+
+    let datos=localStorage.getItem(keyDia(n));
     if(!datos) return;
 
     datos=JSON.parse(datos);
 
-    document.getElementById("fecha"+n).value=datos.fecha;
+    document.getElementById("fecha").value=datos.fecha;
 
     datos.ejercicios.forEach((e,i)=>{
-        let kg=document.getElementById(`d${n}e${i+1}kg`);
-        let rep=document.getElementById(`d${n}e${i+1}rep`);
-        if(kg) kg.value=e.kg;
-        if(rep) rep.value=e.rep;
+        document.getElementById("kg"+i).value=e.kg;
+        document.getElementById("rep"+i).value=e.rep;
     });
 }
 
+/* ---------- HISTORIAL ---------- */
+
 function mostrarDias(){
     ocultarTodo();
-    document.getElementById("dias").classList.remove("hidden");
 
-    let lista=document.getElementById("listaDias");
-    lista.innerHTML="";
+    let html="<h2>Historial</h2>";
 
     for(let i=1;i<=5;i++){
-        let datos=localStorage.getItem("dia"+i);
+
+        let datos=localStorage.getItem(keyDia(i));
+
         if(datos){
             datos=JSON.parse(datos);
 
-            let div=document.createElement("div");
-            div.className="card";
-            div.innerHTML=`<b>Dia ${i}</b><br>Fecha: ${datos.fecha}`;
-            lista.appendChild(div);
+            html+=`
+            <div class="card">
+            <b>Dia ${i}</b><br>
+            Fecha: ${datos.fecha}<br><br>
+            <button onclick="mostrarDia(${i})">Abrir</button>
+            <button onclick="eliminarDia(${i})">Eliminar</button>
+            </div>`;
         }
+    }
+
+    document.getElementById("contenido").innerHTML=html;
+}
+
+/* ---------- ELIMINAR ---------- */
+
+function eliminarDia(n){
+
+    if(confirm("¿Eliminar este día?")){
+        localStorage.removeItem(keyDia(n));
+        mostrarDias();
     }
 }
 
