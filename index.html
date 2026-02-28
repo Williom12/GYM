@@ -2,100 +2,101 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gym App PRO</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GYM</title>
+
+<link rel="manifest" href="manifest.json">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{
-    background:#000;
-    color:#fff;
-    font-family:Arial;
-    margin:0;
+background:#000;
+color:#fff;
+font-family:Arial;
+margin:0;
 }
 
 header{
-    background:#111;
-    padding:15px;
-    text-align:center;
-    font-size:20px;
-    font-weight:bold;
+background:#111;
+text-align:center;
+padding:15px;
+font-size:22px;
+font-weight:bold;
+letter-spacing:2px;
 }
 
 .menu{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:8px;
-    padding:10px;
-    background:#111;
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:8px;
+background:#111;
+padding:10px;
 }
 
 button{
-    background:#222;
-    color:white;
-    border:none;
-    padding:10px 14px;
-    border-radius:8px;
-    cursor:pointer;
+background:#222;
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
 }
 
-button:hover{ background:#333; }
-
 .container{
-    max-width:800px;
-    margin:auto;
-    padding:20px;
+max-width:850px;
+margin:auto;
+padding:20px;
 }
 
 input{
-    background:#111;
-    border:1px solid #444;
-    color:white;
-    padding:6px;
-    width:70px;
-    margin:4px;
-    border-radius:6px;
+background:#111;
+border:1px solid #444;
+color:white;
+padding:6px;
+width:70px;
+margin:4px;
+border-radius:6px;
 }
 
 .card{
-    background:#111;
-    padding:15px;
-    border-radius:10px;
-    margin:10px 0;
+background:#111;
+padding:15px;
+border-radius:10px;
+margin:10px 0;
 }
 
-.hidden{ display:none; }
-
-.pr{
-    color:#00ff88;
-    font-weight:bold;
-}
+.hidden{display:none}
+.pr{color:#00ff88;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<header>GYM APP PRO 💪</header>
+<header>GYM 💪</header>
 
-<div id="perfilSelect" class="container">
+<div id="perfil" class="container">
 <h2>Selecciona perfil</h2>
-<button onclick="seleccionarPerfil('William')">William</button>
-<button onclick="seleccionarPerfil('JuanManuel')">Juan Manuel</button>
+<button onclick="setPerfil('William')">William</button>
+<button onclick="setPerfil('JuanManuel')">Juan Manuel</button>
 </div>
 
 <div id="menu" class="menu hidden">
-<button onclick="mostrarDia(1)">Dia 1</button>
-<button onclick="mostrarDia(2)">Dia 2</button>
-<button onclick="mostrarDia(3)">Dia 3</button>
-<button onclick="mostrarDia(4)">Dia 4</button>
-<button onclick="mostrarDia(5)">Dia 5</button>
-<button onclick="mostrarHistorial()">Historial</button>
-<button onclick="mostrarProgreso()">Progreso</button>
+<button onclick="dia(1)">D1</button>
+<button onclick="dia(2)">D2</button>
+<button onclick="dia(3)">D3</button>
+<button onclick="dia(4)">D4</button>
+<button onclick="dia(5)">D5</button>
+<button onclick="historial()">Historial</button>
+<button onclick="progreso()">Progreso</button>
+<button onclick="calendario()">Calendario</button>
 </div>
 
-<div class="container" id="contenido"></div>
+<div id="app" class="container"></div>
 
 <script>
+
 let perfil="";
 
 const rutina={
@@ -106,139 +107,180 @@ const rutina={
 5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión"]
 };
 
-function seleccionarPerfil(p){
-    perfil=p;
-    document.getElementById("perfilSelect").classList.add("hidden");
-    document.getElementById("menu").classList.remove("hidden");
+function setPerfil(p){
+perfil=p;
+document.getElementById("perfil").classList.add("hidden");
+document.getElementById("menu").classList.remove("hidden");
 }
 
-function keyDia(n){
-    return perfil+"_dia"+n;
+const key=d=>perfil+"_dia"+d;
+
+function limpiar(){ app.innerHTML=""; }
+
+function dia(n){
+
+limpiar();
+
+let html=`<h2>Dia ${n} <input type="date" id="fecha"></h2>`;
+
+rutina[n].forEach((e,i)=>{
+html+=`${e}
+<input id="kg${i}" placeholder="KG">
+Reps <input id="rep${i}">
+<span id="pr${i}" class="pr"></span><br>`;
+});
+
+html+=`<br><button onclick="guardar(${n})">Guardar</button>`;
+
+app.innerHTML=html;
+
+cargar(n);
+mostrarPR(n);
 }
 
-function limpiar(){
-    document.getElementById("contenido").innerHTML="";
+function guardar(n){
+
+let data={
+fecha:fecha.value,
+ej:[]
+};
+
+rutina[n].forEach((_,i)=>{
+data.ej.push({
+kg:Number(document.getElementById("kg"+i).value)||0,
+rep:document.getElementById("rep"+i).value
+});
+});
+
+localStorage.setItem(key(n),JSON.stringify(data));
+alert("Guardado ✅");
 }
 
-function mostrarDia(n){
-    limpiar();
-    let html=`<h2>Dia ${n} <input type="date" id="fecha"></h2>`;
+function cargar(n){
+let d=localStorage.getItem(key(n));
+if(!d)return;
+d=JSON.parse(d);
 
-    rutina[n].forEach((e,i)=>{
-        html+=`
-        <p>${e}
-        <input id="kg${i}" placeholder="KG">
-        Reps <input id="rep${i}">
-        <span id="pr${i}" class="pr"></span>
-        </p>`;
-    });
+fecha.value=d.fecha;
 
-    html+=`<button onclick="guardarDia(${n})">Guardar</button>`;
-    document.getElementById("contenido").innerHTML=html;
-
-    cargarDia(n);
-    mostrarPR(n);
-}
-
-function guardarDia(n){
-
-    let datos={
-        fecha:document.getElementById("fecha").value,
-        ejercicios:[]
-    };
-
-    rutina[n].forEach((_,i)=>{
-        datos.ejercicios.push({
-            kg:parseFloat(document.getElementById("kg"+i).value)||0,
-            rep:document.getElementById("rep"+i).value
-        });
-    });
-
-    localStorage.setItem(keyDia(n),JSON.stringify(datos));
-    alert("Guardado ✅");
-}
-
-function cargarDia(n){
-    let datos=localStorage.getItem(keyDia(n));
-    if(!datos) return;
-    datos=JSON.parse(datos);
-
-    document.getElementById("fecha").value=datos.fecha;
-
-    datos.ejercicios.forEach((e,i)=>{
-        document.getElementById("kg"+i).value=e.kg;
-        document.getElementById("rep"+i).value=e.rep;
-    });
+d.ej.forEach((e,i)=>{
+kg=i;
+document.getElementById("kg"+i).value=e.kg;
+document.getElementById("rep"+i).value=e.rep;
+});
 }
 
 function mostrarPR(n){
 
-    rutina[n].forEach((e,i)=>{
+rutina[n].forEach((_,i)=>{
 
-        let max=0;
+let max=0;
 
-        for(let d=1;d<=5;d++){
-            let datos=localStorage.getItem(perfil+"_dia"+d);
-            if(datos){
-                datos=JSON.parse(datos);
-                if(datos.ejercicios[i]){
-                    max=Math.max(max,datos.ejercicios[i].kg);
-                }
-            }
-        }
-
-        if(max>0){
-            document.getElementById("pr"+i).innerText=" PR: "+max+"kg";
-        }
-    });
+for(let d=1;d<=5;d++){
+let data=localStorage.getItem(key(d));
+if(data){
+data=JSON.parse(data);
+if(data.ej[i])
+max=Math.max(max,data.ej[i].kg);
+}
 }
 
-function mostrarHistorial(){
-    limpiar();
-    let html="<h2>Historial</h2>";
-
-    for(let i=1;i<=5;i++){
-        let datos=localStorage.getItem(keyDia(i));
-        if(datos){
-            datos=JSON.parse(datos);
-            html+=`
-            <div class="card">
-            <b>Dia ${i}</b><br>
-            Fecha: ${datos.fecha}<br><br>
-            <button onclick="mostrarDia(${i})">Abrir</button>
-            <button onclick="eliminarDia(${i})">Eliminar</button>
-            </div>`;
-        }
-    }
-
-    document.getElementById("contenido").innerHTML=html;
+if(max>0)
+document.getElementById("pr"+i).innerText="🏆 "+max+"kg";
+});
 }
 
-function eliminarDia(n){
-    if(confirm("¿Eliminar día?")){
-        localStorage.removeItem(keyDia(n));
-        mostrarHistorial();
-    }
+function historial(){
+
+limpiar();
+let html="<h2>Historial</h2>";
+
+for(let i=1;i<=5;i++){
+let d=localStorage.getItem(key(i));
+if(d){
+d=JSON.parse(d);
+
+html+=`
+<div class="card">
+Dia ${i}<br>
+Fecha: ${d.fecha}<br><br>
+<button onclick="dia(${i})">Abrir</button>
+<button onclick="eliminar(${i})">Eliminar</button>
+</div>`;
+}
 }
 
-/* -------- PROGRESO SIMPLE -------- */
-
-function mostrarProgreso(){
-    limpiar();
-    let html="<h2>Progreso General</h2>";
-
-    for(let d=1;d<=5;d++){
-        let datos=localStorage.getItem(keyDia(d));
-        if(datos){
-            datos=JSON.parse(datos);
-            let total=0;
-            datos.ejercicios.forEach(e=> total+=e.kg);
-            html+=`<div class="card">Dia ${d} - Total levantado: ${total} kg</div>`;
-        }
-    }
-
-    document.getElementById("contenido").innerHTML=html;
+app.innerHTML=html;
 }
+
+function eliminar(n){
+if(confirm("Eliminar día?")){
+localStorage.removeItem(key(n));
+historial();
+}
+}
+
+/* -------- GRAFICO GENERAL -------- */
+
+function progreso(){
+
+limpiar();
+
+app.innerHTML=`<h2>Progreso 📈</h2><canvas id="chart"></canvas>`;
+
+let labels=[];
+let data=[];
+
+for(let d=1;d<=5;d++){
+let info=localStorage.getItem(key(d));
+if(info){
+info=JSON.parse(info);
+
+let total=0;
+info.ej.forEach(e=>total+=e.kg);
+
+labels.push("Dia "+d);
+data.push(total);
+}
+}
+
+new Chart(chart,{
+type:'line',
+data:{labels,
+datasets:[{label:"Peso total (kg)",data,tension:.3}]},
+options:{
+plugins:{legend:{labels:{color:"white"}}},
+scales:{
+x:{ticks:{color:"white"}},
+y:{ticks:{color:"white"}}
+}
+}
+});
+}
+
+/* -------- CALENDARIO -------- */
+
+function calendario(){
+
+limpiar();
+let html="<h2>Calendario 📅</h2>";
+
+for(let d=1;d<=5;d++){
+let info=localStorage.getItem(key(d));
+if(info){
+info=JSON.parse(info);
+html+=`<div class="card">${info.fecha} — Dia ${d}</div>`;
+}
+}
+
+app.innerHTML=html;
+}
+
+/* PWA */
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+
 </script>
 
 </body>
