@@ -44,12 +44,9 @@ border:none;
 padding:10px 14px;
 border-radius:10px;
 cursor:pointer;
-transition:.2s;
 }
 
-button:active{
-transform:scale(.95);
-}
+button:active{ transform:scale(.95); }
 
 /* SCREEN SYSTEM */
 
@@ -68,28 +65,20 @@ padding:20px;
 box-sizing:border-box;
 }
 
-/* iOS animations */
+.enter{ animation:in .35s ease forwards; }
+.exit{ animation:out .35s ease forwards; }
 
-.enter{
-animation:slideIn .35s ease forwards;
-}
-
-.exit{
-animation:slideOut .35s ease forwards;
-}
-
-@keyframes slideIn{
+@keyframes in{
 from{transform:translateX(40px);opacity:0}
 to{transform:translateX(0);opacity:1}
 }
 
-@keyframes slideOut{
+@keyframes out{
 from{transform:translateX(0);opacity:1}
 to{transform:translateX(-40px);opacity:0}
 }
 
-/* perfil center */
-
+/* CENTER */
 .center{
 display:flex;
 flex-direction:column;
@@ -124,16 +113,17 @@ border-radius:6px;
 margin:5px;
 }
 
-.pr{color:#00ff9f;font-weight:bold}
-
 .save{
 background:#00aa66;
-padding:12px;
-border-radius:10px;
-margin-top:10px;
+padding:14px;
+border-radius:12px;
+margin-top:15px;
+width:100%;
+font-weight:bold;
 }
 
 .hidden{display:none}
+.pr{color:#00ff9f;font-weight:bold}
 
 </style>
 </head>
@@ -143,6 +133,7 @@ margin-top:10px;
 <header>GYM 💪</header>
 
 <div id="menu" class="menu hidden">
+<button onclick="home()">Inicio</button>
 <button onclick="abrirDia(1)">D1</button>
 <button onclick="abrirDia(2)">D2</button>
 <button onclick="abrirDia(3)">D3</button>
@@ -156,7 +147,7 @@ margin-top:10px;
 
 <script>
 
-/* ---------- NAV SYSTEM ---------- */
+/* ---------- VIEW SYSTEM ---------- */
 
 let currentView=null;
 
@@ -164,24 +155,22 @@ function cambiarVista(html){
 
 const screen=document.getElementById("screen");
 
+const nueva=document.createElement("div");
+nueva.className="view";
+nueva.innerHTML=html;
+
 if(currentView){
 currentView.classList.add("exit");
-
-setTimeout(()=>{
-currentView.remove();
-crearNueva();
-},300);
-
-}else crearNueva();
-
-function crearNueva(){
-const div=document.createElement("div");
-div.className="view enter";
-div.innerHTML=html;
-screen.appendChild(div);
-currentView=div;
+setTimeout(()=>currentView.remove(),300);
 }
 
+screen.appendChild(nueva);
+
+requestAnimationFrame(()=>{
+nueva.classList.add("enter");
+});
+
+currentView=nueva;
 }
 
 /* ---------- DATA ---------- */
@@ -214,7 +203,18 @@ cambiarVista(`
 function setPerfil(p){
 perfil=p;
 menu.classList.remove("hidden");
-abrirDia(1);
+home(); /* ahora entra al inicio */
+}
+
+/* ---------- HOME ---------- */
+
+function home(){
+cambiarVista(`
+<div class="center">
+<h2>Bienvenido ${perfil}</h2>
+<p>Selecciona un día para entrenar 💪</p>
+</div>
+`);
 }
 
 /* ---------- DIA ---------- */
@@ -237,14 +237,14 @@ Reps <input id="rep_${d}_${i}">
 </div>`;
 });
 
-html+=`<button class="save" onclick="guardar()">Guardar</button>`;
+html+=`<button class="save" onclick="guardar()">Guardar ✅</button>`;
 
 cambiarVista(html);
 
 setTimeout(()=>{
 cargar(d);
 mostrarPR(d);
-},50);
+},80);
 }
 
 /* ---------- SAVE ---------- */
@@ -343,8 +343,7 @@ historial();
 
 function progreso(){
 
-let html=`<h2>Progreso 📈</h2><canvas id="chart"></canvas>`;
-cambiarVista(html);
+cambiarVista(`<h2>Progreso 📈</h2><canvas id="chart"></canvas>`);
 
 setTimeout(()=>{
 
@@ -371,7 +370,7 @@ scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
 }
 });
 
-},100);
+},120);
 }
 
 /* START */
