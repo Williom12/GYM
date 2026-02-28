@@ -3,105 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>GYM</title>
 
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<!-- Chart.js (grafico progreso) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
+/* ===== TU ESTILO ORIGINAL (NO CAMBIADO) ===== */
 
 body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:black;
-    color:white;
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:black;
+color:white;
 }
 
-/* PANTALLAS */
 .pantalla{
-    display:none;
-    min-height:100vh;
-    padding:20px;
+display:none;
+min-height:100vh;
+padding:20px;
 }
 
-.activa{
-    display:block;
-}
+.activa{display:block;}
 
-/* CENTRAR PERFIL */
 .center{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+height:100vh;
 }
 
-h1,h2{
-    text-align:center;
-}
-
-/* BOTONES */
+h1,h2{text-align:center;}
 
 button{
-    background:#111;
-    border:1px solid #333;
-    color:white;
-    padding:14px;
-    margin:8px;
-    width:220px;
-    border-radius:10px;
-    font-size:16px;
-    cursor:pointer;
+background:#111;
+border:1px solid #333;
+color:white;
+padding:14px;
+margin:8px;
+width:220px;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
 }
 
-button:hover{
-    background:#1f1f1f;
-}
-
-/* INPUTS */
+button:hover{background:#1f1f1f;}
 
 input{
-    width:80px;
-    background:#000;
-    border:1px solid #444;
-    color:white;
-    padding:6px;
-    border-radius:6px;
-    text-align:center;
+width:80px;
+background:#000;
+border:1px solid #444;
+color:white;
+padding:6px;
+border-radius:6px;
+text-align:center;
 }
-
-/* MENU */
 
 .menu{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    margin-top:30px;
+display:flex;
+flex-direction:column;
+align-items:center;
+margin-top:30px;
 }
 
-/* EJERCICIOS */
-
-.ejercicio{
-    margin:15px 0;
-}
-
-/* LISTA DIAS */
+.ejercicio{margin:15px 0;}
 
 .registro{
-    border:1px solid #333;
-    padding:12px;
-    margin:10px;
-    border-radius:10px;
+border:1px solid #333;
+padding:12px;
+margin:10px;
+border-radius:10px;
 }
 
-.eliminar{
-    background:#550000;
-}
+.eliminar{background:#550000;}
+.guardar{background:#004400;}
+.volver{background:#222;}
 
-.guardar{
-    background:#004400;
-}
-
-.volver{
-    background:#222;
+canvas{
+max-width:600px;
+margin:auto;
 }
 
 </style>
@@ -109,107 +95,78 @@ input{
 
 <body>
 
-<!-- ================= PERFIL ================= -->
-
+<!-- PERFIL -->
 <div id="perfil" class="pantalla activa center">
-    <h1>GYM</h1>
-    <h2>Selecciona Perfil</h2>
-
-    <button onclick="seleccionarPerfil('William')">William</button>
-    <button onclick="seleccionarPerfil('Juan Manuel')">Juan Manuel</button>
+<h1>GYM</h1>
+<h2>Selecciona Perfil</h2>
+<button onclick="seleccionarPerfil('William')">William</button>
+<button onclick="seleccionarPerfil('Juan Manuel')">Juan Manuel</button>
 </div>
 
-<!-- ================= MENU ================= -->
-
+<!-- MENU -->
 <div id="menu" class="pantalla center">
-    <h2 id="nombrePerfil"></h2>
+<h2 id="nombrePerfil"></h2>
 
-    <div class="menu">
-        <button onclick="abrirDia(1)">Día 1</button>
-        <button onclick="abrirDia(2)">Día 2</button>
-        <button onclick="abrirDia(3)">Día 3</button>
-        <button onclick="abrirDia(4)">Día 4</button>
-        <button onclick="abrirDia(5)">Día 5</button>
-        <button onclick="mostrarDias()">Días</button>
-    </div>
+<div class="menu">
+<button onclick="abrirDia(1)">Día 1</button>
+<button onclick="abrirDia(2)">Día 2</button>
+<button onclick="abrirDia(3)">Día 3</button>
+<button onclick="abrirDia(4)">Día 4</button>
+<button onclick="abrirDia(5)">Día 5</button>
+<button onclick="mostrarDias()">Días</button>
+<button onclick="mostrarProgreso()">Progreso</button>
+</div>
 </div>
 
-<!-- ================= DIA ================= -->
-
+<!-- DIA -->
 <div id="dia" class="pantalla">
-    <h2 id="tituloDia"></h2>
-    <p>Fecha: <input type="date" id="fecha"></p>
+<h2 id="tituloDia"></h2>
+<p>Fecha: <input type="date" id="fecha"></p>
+<div id="ejercicios"></div>
 
-    <div id="ejercicios"></div>
-
-    <br>
-    <button class="guardar" onclick="guardarDia()">Guardar</button>
-    <button class="volver" onclick="irMenu()">Volver</button>
+<br>
+<button class="guardar" onclick="guardarDia()">Guardar</button>
+<button class="volver" onclick="irMenu()">Volver</button>
 </div>
 
-<!-- ================= HISTORIAL ================= -->
-
+<!-- HISTORIAL -->
 <div id="diasGuardados" class="pantalla">
-    <h2>Días Guardados</h2>
-    <div id="listaDias"></div>
-    <button class="volver" onclick="irMenu()">Volver</button>
+<h2>Días Guardados</h2>
+<div id="listaDias"></div>
+<button class="volver" onclick="irMenu()">Volver</button>
+</div>
+
+<!-- PROGRESO -->
+<div id="progreso" class="pantalla">
+<h2>Progreso</h2>
+<canvas id="grafico"></canvas>
+<br>
+<button class="volver" onclick="irMenu()">Volver</button>
 </div>
 
 <script>
 
+/* ===== SERVICE WORKER (PWA) ===== */
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service-worker.js");
+}
+
 let perfilActual="";
 let diaActual=0;
 
-/* EJERCICIOS */
-
 const rutina={
-1:[
-"Press inclinado con mancuernas",
-"Fondos en paralelas",
-"Aperturas con mancuernas",
-"Press cerrado",
-"Extensión de tríceps en polea"
-],
-2:[
-"Dominadas",
-"Remo con barra",
-"Jalón al pecho",
-"Peso muerto rumano",
-"Curl barra",
-"Curl inclinado"
-],
-3:[
-"Sentadilla libre",
-"Prensa",
-"Curl femoral",
-"Extensión de cuádriceps",
-"Gemelos de pie"
-],
-4:[
-"Press militar",
-"Elevaciones laterales",
-"Elevaciones posteriores",
-"Encogimientos con barra",
-"Crunch con peso"
-],
-5:[
-"Press banca",
-"Dominadas",
-"Remo mancuerna",
-"Curl + Extensión superserie"
-]
+1:["Press inclinado con mancuernas","Fondos en paralelas","Aperturas con mancuernas","Press cerrado","Extensión de tríceps en polea"],
+2:["Dominadas","Remo con barra","Jalón al pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
+3:["Sentadilla libre","Prensa","Curl femoral","Extensión de cuádriceps","Gemelos de pie"],
+4:["Press militar","Elevaciones laterales","Elevaciones posteriores","Encogimientos con barra","Crunch con peso"],
+5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión superserie"]
 };
-
-/* CAMBIO DE PANTALLA */
 
 function mostrar(id){
 document.querySelectorAll(".pantalla")
 .forEach(p=>p.classList.remove("activa"));
-
 document.getElementById(id).classList.add("activa");
 }
-
-/* PERFIL */
 
 function seleccionarPerfil(nombre){
 perfilActual=nombre;
@@ -217,18 +174,11 @@ document.getElementById("nombrePerfil").innerText="Perfil: "+nombre;
 mostrar("menu");
 }
 
-/* MENU */
-
-function irMenu(){
-mostrar("menu");
-}
-
-/* ABRIR DIA */
+function irMenu(){mostrar("menu");}
 
 function abrirDia(n){
 diaActual=n;
 document.getElementById("tituloDia").innerText=`Día ${n}`;
-
 const cont=document.getElementById("ejercicios");
 cont.innerHTML="";
 
@@ -244,8 +194,6 @@ Reps <input id="rep${i}">
 mostrar("dia");
 }
 
-/* GUARDAR */
-
 function guardarDia(){
 
 let datos={
@@ -257,9 +205,7 @@ ejercicios:[]
 
 rutina[diaActual].forEach((ej,i)=>{
 datos.ejercicios.push({
-nombre:ej,
-kg:document.getElementById(`kg${i}`).value,
-reps:document.getElementById(`rep${i}`).value
+kg:document.getElementById(`kg${i}`).value
 });
 });
 
@@ -270,8 +216,6 @@ localStorage.setItem("gymDatos",JSON.stringify(historial));
 alert("Día guardado ✅");
 irMenu();
 }
-
-/* MOSTRAR DIAS */
 
 function mostrarDias(){
 
@@ -288,22 +232,60 @@ lista.innerHTML+=`
 <div class="registro">
 <b>Día ${d.dia}</b><br>
 Fecha: ${d.fecha}<br><br>
-<button class="eliminar" onclick="eliminarDia(${index})">
-Eliminar
-</button>
+<button class="eliminar" onclick="eliminarDia(${index})">Eliminar</button>
 </div>`;
 });
 
 mostrar("diasGuardados");
 }
 
-/* ELIMINAR */
-
 function eliminarDia(i){
 let historial=JSON.parse(localStorage.getItem("gymDatos"))||[];
 historial.splice(i,1);
 localStorage.setItem("gymDatos",JSON.stringify(historial));
 mostrarDias();
+}
+
+/* ===== GRAFICO PROGRESO ===== */
+
+let chart;
+
+function mostrarProgreso(){
+
+let historial=JSON.parse(localStorage.getItem("gymDatos"))||[];
+
+let datosPerfil=historial.filter(d=>d.perfil===perfilActual);
+
+let labels=[];
+let pesos=[];
+
+datosPerfil.forEach(d=>{
+let total=0;
+d.ejercicios.forEach(e=>{
+total+=Number(e.kg)||0;
+});
+labels.push("Día "+d.dia);
+pesos.push(total);
+});
+
+const ctx=document.getElementById("grafico");
+
+if(chart) chart.destroy();
+
+chart=new Chart(ctx,{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Peso total levantado",
+data:pesos,
+borderColor:"white",
+tension:0.3
+}]
+}
+});
+
+mostrar("progreso");
 }
 
 </script>
