@@ -3,43 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>GYM</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 
-<!-- Chart.js (grafico progreso) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* ===== TU ESTILO ORIGINAL (NO CAMBIADO) ===== */
+
+/* ===== BASE ===== */
 
 body{
 margin:0;
-font-family:Arial, Helvetica, sans-serif;
 background:black;
 color:white;
+font-family:Arial, Helvetica, sans-serif;
+overflow:hidden; /* 🔥 evita scroll global */
 }
+
+/* ===== PANTALLAS INDEPENDIENTES ===== */
 
 .pantalla{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100vh;
 display:none;
-min-height:100vh;
+overflow-y:auto; /* scroll interno */
 padding:20px;
+box-sizing:border-box;
+background:black;
 }
 
-.activa{display:block;}
+.activa{
+display:block;
+}
+
+/* ===== CENTRAR ===== */
 
 .center{
 display:flex;
 justify-content:center;
 align-items:center;
 flex-direction:column;
-height:100vh;
+height:100%;
 }
 
-h1,h2{text-align:center;}
+h1,h2{text-align:center}
+
+/* ===== BOTONES ===== */
 
 button{
 background:#111;
@@ -53,7 +67,9 @@ font-size:16px;
 cursor:pointer;
 }
 
-button:hover{background:#1f1f1f;}
+button:hover{
+background:#1f1f1f;
+}
 
 input{
 width:80px;
@@ -96,15 +112,19 @@ margin:auto;
 <body>
 
 <!-- PERFIL -->
-<div id="perfil" class="pantalla activa center">
+<div id="perfil" class="pantalla activa">
+<div class="center">
 <h1>GYM</h1>
 <h2>Selecciona Perfil</h2>
+
 <button onclick="seleccionarPerfil('William')">William</button>
 <button onclick="seleccionarPerfil('Juan Manuel')">Juan Manuel</button>
 </div>
+</div>
 
 <!-- MENU -->
-<div id="menu" class="pantalla center">
+<div id="menu" class="pantalla">
+<div class="center">
 <h2 id="nombrePerfil"></h2>
 
 <div class="menu">
@@ -117,11 +137,16 @@ margin:auto;
 <button onclick="mostrarProgreso()">Progreso</button>
 </div>
 </div>
+</div>
 
 <!-- DIA -->
 <div id="dia" class="pantalla">
 <h2 id="tituloDia"></h2>
-<p>Fecha: <input type="date" id="fecha"></p>
+
+<p>Fecha:
+<input type="date" id="fecha">
+</p>
+
 <div id="ejercicios"></div>
 
 <br>
@@ -146,13 +171,16 @@ margin:auto;
 
 <script>
 
-/* ===== SERVICE WORKER (PWA) ===== */
-if ("serviceWorker" in navigator) {
+/* ===== PWA ===== */
+if("serviceWorker" in navigator){
 navigator.serviceWorker.register("service-worker.js");
 }
 
 let perfilActual="";
 let diaActual=0;
+let chart;
+
+/* ===== RUTINA ===== */
 
 const rutina={
 1:["Press inclinado con mancuernas","Fondos en paralelas","Aperturas con mancuernas","Press cerrado","Extensión de tríceps en polea"],
@@ -162,11 +190,21 @@ const rutina={
 5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión superserie"]
 };
 
+/* ===== CAMBIO REAL DE PAGINA ===== */
+
 function mostrar(id){
+
 document.querySelectorAll(".pantalla")
-.forEach(p=>p.classList.remove("activa"));
+.forEach(p=>{
+p.classList.remove("activa");
+p.scrollTop=0;
+});
+
 document.getElementById(id).classList.add("activa");
+
 }
+
+/* ===== PERFIL ===== */
 
 function seleccionarPerfil(nombre){
 perfilActual=nombre;
@@ -174,11 +212,17 @@ document.getElementById("nombrePerfil").innerText="Perfil: "+nombre;
 mostrar("menu");
 }
 
-function irMenu(){mostrar("menu");}
+function irMenu(){
+mostrar("menu");
+}
+
+/* ===== ABRIR DIA ===== */
 
 function abrirDia(n){
+
 diaActual=n;
-document.getElementById("tituloDia").innerText=`Día ${n}`;
+document.getElementById("tituloDia").innerText="Día "+n;
+
 const cont=document.getElementById("ejercicios");
 cont.innerHTML="";
 
@@ -193,6 +237,8 @@ Reps <input id="rep${i}">
 
 mostrar("dia");
 }
+
+/* ===== GUARDAR ===== */
 
 function guardarDia(){
 
@@ -217,6 +263,8 @@ alert("Día guardado ✅");
 irMenu();
 }
 
+/* ===== MOSTRAR DIAS ===== */
+
 function mostrarDias(){
 
 let lista=document.getElementById("listaDias");
@@ -232,12 +280,16 @@ lista.innerHTML+=`
 <div class="registro">
 <b>Día ${d.dia}</b><br>
 Fecha: ${d.fecha}<br><br>
-<button class="eliminar" onclick="eliminarDia(${index})">Eliminar</button>
+<button class="eliminar" onclick="eliminarDia(${index})">
+Eliminar
+</button>
 </div>`;
 });
 
 mostrar("diasGuardados");
 }
+
+/* ===== ELIMINAR ===== */
 
 function eliminarDia(i){
 let historial=JSON.parse(localStorage.getItem("gymDatos"))||[];
@@ -246,9 +298,7 @@ localStorage.setItem("gymDatos",JSON.stringify(historial));
 mostrarDias();
 }
 
-/* ===== GRAFICO PROGRESO ===== */
-
-let chart;
+/* ===== GRAFICO ===== */
 
 function mostrarProgreso(){
 
