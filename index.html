@@ -3,24 +3,24 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>GYM</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 
+<!-- CHART.JS (graficas) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
-*{
-box-sizing:border-box;
--webkit-tap-highlight-color: transparent;
-}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
 body{
 background:#000;
 color:#fff;
-font-family:Arial, sans-serif;
+font-family:Arial;
 margin:0;
 display:flex;
 justify-content:center;
@@ -30,8 +30,6 @@ justify-content:center;
 width:100%;
 max-width:500px;
 min-height:100vh;
-display:flex;
-flex-direction:column;
 }
 
 header{
@@ -42,23 +40,21 @@ font-size:22px;
 font-weight:bold;
 position:sticky;
 top:0;
-z-index:10;
 }
 
 .streak{
 position:absolute;
 right:15px;
 top:18px;
-font-size:18px;
 }
 
 .menu{
 display:flex;
 flex-wrap:wrap;
-justify-content:center;
 gap:8px;
 padding:12px;
 background:#111;
+justify-content:center;
 }
 
 button{
@@ -67,14 +63,8 @@ color:white;
 border:none;
 padding:12px;
 border-radius:10px;
-cursor:pointer;
-font-size:15px;
 flex:1 1 30%;
-min-width:90px;
-}
-
-button:active{
-transform:scale(0.97);
+font-size:15px;
 }
 
 .container{
@@ -89,7 +79,6 @@ padding:10px;
 width:70px;
 margin:4px;
 border-radius:8px;
-font-size:16px;
 }
 
 .card{
@@ -101,9 +90,10 @@ margin:12px 0;
 
 .hidden{display:none;}
 
-h2{
-text-align:center;
-margin-top:0;
+canvas{
+background:#111;
+border-radius:12px;
+padding:10px;
 }
 
 </style>
@@ -140,22 +130,24 @@ GYM 💪
 
 <script>
 
-/* ===== SERVICE WORKER ===== */
 if('serviceWorker' in navigator){
 navigator.serviceWorker.register('service-worker.js');
 }
 
-/* ===== TODO TU JS ORIGINAL (SIN CAMBIOS) ===== */
-
 let perfil="";
 
 const rutina={
-1:["Press inclinado mancuernas","Fondos paralelas","Aperturas mancuernas","Press cerrado","Extensión tríceps polea"],
-2:["Dominadas","Remo con barra","Jalón al pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
-3:["Sentadilla libre","Prensa","Curl femoral","Extensión cuádriceps","Gemelos de pie"],
-4:["Press militar","Elevaciones laterales","Elevaciones posteriores","Encogimientos barra","Crunch con peso"],
-5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión superserie"]
+1:["Press inclinado","Fondos","Aperturas","Press cerrado","Extensión tríceps"],
+2:["Dominadas","Remo barra","Jalón pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
+3:["Sentadilla","Prensa","Curl femoral","Extensión cuádriceps","Gemelos"],
+4:["Press militar","Elevaciones laterales","Elevaciones posteriores","Encogimientos","Crunch peso"],
+5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión"]
 };
+
+function resetView(){
+document.getElementById("contenido").innerHTML="";
+window.scrollTo(0,0); // ✅ FIX MOVIL
+}
 
 function seleccionarPerfil(p){
 perfil=p;
@@ -166,11 +158,11 @@ actualizarRacha();
 
 function keyDia(n){ return perfil+"_dia_"+n; }
 
-function limpiar(){ document.getElementById("contenido").innerHTML=""; }
+/* -------- DIAS -------- */
 
 function mostrarDia(n){
 
-limpiar();
+resetView();
 
 let html=`<h2>Dia ${n} <input type="date" id="fecha"></h2>`;
 
@@ -182,7 +174,8 @@ Reps <input id="rep${i}">
 });
 
 html+=`<button onclick="guardarDia(${n})">Guardar</button>`;
-document.getElementById("contenido").innerHTML=html;
+
+contenido.innerHTML=html;
 
 cargarDia(n);
 }
@@ -190,7 +183,7 @@ cargarDia(n);
 function guardarDia(n){
 
 let datos={
-fecha:document.getElementById("fecha").value,
+fecha:fecha.value,
 ejercicios:[]
 };
 
@@ -207,37 +200,46 @@ alert("Guardado ✅");
 }
 
 function cargarDia(n){
+
 let datos=localStorage.getItem(keyDia(n));
 if(!datos) return;
 
 datos=JSON.parse(datos);
 
-document.getElementById("fecha").value=datos.fecha;
+fecha.value=datos.fecha;
 
 datos.ejercicios.forEach((e,i)=>{
+kg0?.value;
 document.getElementById("kg"+i).value=e.kg;
 document.getElementById("rep"+i).value=e.rep;
 });
 }
+
+/* -------- RACHA -------- */
 
 function actualizarRacha(){
 let total=0;
 for(let i=1;i<=5;i++){
 if(localStorage.getItem(keyDia(i))) total++;
 }
-document.getElementById("racha").innerText=total+" 🔥";
+racha.innerText=total+" 🔥";
 }
+
+/* -------- HISTORIAL -------- */
 
 function mostrarHistorial(){
 
-limpiar();
+resetView();
+
 let html="<h2>Historial</h2>";
 
 for(let i=1;i<=5;i++){
 let datos=localStorage.getItem(keyDia(i));
 if(datos){
 datos=JSON.parse(datos);
-html+=`<div class="card">
+
+html+=`
+<div class="card">
 <b>Dia ${i}</b><br>
 Fecha: ${datos.fecha}<br><br>
 <button onclick="mostrarDia(${i})">Abrir</button>
@@ -246,7 +248,7 @@ Fecha: ${datos.fecha}<br><br>
 }
 }
 
-document.getElementById("contenido").innerHTML=html;
+contenido.innerHTML=html;
 }
 
 function eliminarDia(n){
@@ -257,51 +259,65 @@ mostrarHistorial();
 }
 }
 
+/* -------- PROGRESO + GRAFICAS -------- */
+
 function mostrarProgreso(){
 
-limpiar();
+resetView();
 
-let diasEntrenados=0;
-let pesoTotal=0;
-let maxPeso=0;
-let mejorEjercicio="Ninguno";
-let totalEjercicios=0;
+let labels=[];
+let data=[];
+let totalPeso=0;
 
-for(let d=1; d<=5; d++){
+for(let i=1;i<=5;i++){
 
-let datos=localStorage.getItem(keyDia(d));
+let datos=localStorage.getItem(keyDia(i));
 
 if(datos){
-diasEntrenados++;
 datos=JSON.parse(datos);
 
-datos.ejercicios.forEach((e,i)=>{
+let suma=0;
 
-let kg=Number(e.kg)||0;
+datos.ejercicios.forEach(e=>{
+suma+=Number(e.kg)||0;
+});
 
-pesoTotal+=kg;
+labels.push("Dia "+i);
+data.push(suma);
+totalPeso+=suma;
+}
+}
 
-if(kg>0) totalEjercicios++;
+contenido.innerHTML=`
+<h2>Progreso</h2>
 
-if(kg>maxPeso){
-maxPeso=kg;
-mejorEjercicio=rutina[d][i];
+<div class="card">🏋️ Peso total levantado: <b>${totalPeso} kg</b></div>
+
+<canvas id="graficaPeso"></canvas>
+`;
+
+if(labels.length>0){
+
+new Chart(document.getElementById("graficaPeso"),{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Peso levantado",
+data:data,
+borderWidth:3,
+tension:0.3
+}]
+},
+options:{
+plugins:{legend:{labels:{color:"white"}}},
+scales:{
+x:{ticks:{color:"white"}},
+y:{ticks:{color:"white"}}
+}
 }
 });
 }
-}
-
-let promedio = totalEjercicios>0
-? (pesoTotal/totalEjercicios).toFixed(1)
-: 0;
-
-document.getElementById("contenido").innerHTML=`
-<h2>Progreso</h2>
-<div class="card">📅 Días entrenados: <b>${diasEntrenados}</b></div>
-<div class="card">🏋️ Peso total levantado: <b>${pesoTotal} kg</b></div>
-<div class="card">💪 Ejercicio más fuerte:<br><b>${mejorEjercicio}</b><br>${maxPeso} kg</div>
-<div class="card">📊 Promedio por ejercicio: <b>${promedio} kg</b></div>
-<div class="card">🔥 Racha actual: <b>${diasEntrenados}</b></div>`;
 }
 
 </script>
