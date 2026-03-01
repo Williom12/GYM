@@ -5,46 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GYM</title>
 
+<link rel="manifest" href="manifest.json">
+
 <style>
+*{box-sizing:border-box;}
+
 body{
   margin:0;
   background:#000;
   color:#fff;
   font-family:Arial,Helvetica,sans-serif;
-  display:flex;
-  justify-content:center;
+  height:100vh;
+  overflow:hidden;
 }
 
 .container{
-  width:100%;
   max-width:500px;
-  padding:15px;
+  margin:auto;
+  height:100vh;
+  position:relative;
 }
 
-h1,h2{text-align:center;}
+/* PAGINAS */
+.page{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  overflow-y:auto;
+  padding:15px;
+  background:#000;
+  display:none;
+}
+
+.page.active{display:block;}
+
+h2{text-align:center;}
 
 button{
   width:100%;
   padding:14px;
   margin:6px 0;
   background:#111;
-  color:white;
+  color:#fff;
   border:1px solid #333;
   border-radius:10px;
   font-size:16px;
 }
 
 input{
-  width:70px;
+  width:65px;
   background:#111;
-  color:white;
+  color:#fff;
   border:1px solid #333;
   border-radius:6px;
   text-align:center;
 }
-
-.page{display:none;}
-.active{display:block;}
 
 .topbar{
   display:flex;
@@ -52,16 +69,13 @@ input{
   align-items:center;
 }
 
-.streak{
-  font-size:18px;
-}
+.streak{font-size:18px;}
 
 .dayCard{
   background:#111;
   padding:12px;
   margin:8px 0;
   border-radius:10px;
-  cursor:pointer;
 }
 
 .deleteBtn{
@@ -79,11 +93,12 @@ input{
 </head>
 
 <body>
+
 <div class="container">
 
 <div class="topbar">
 <h2>GYM</h2>
-<div class="streak" id="streak">🔥 0</div>
+<div id="streak">🔥 0</div>
 </div>
 
 <!-- PERFILES -->
@@ -100,8 +115,8 @@ input{
 <button onclick="openDay(3)">Dia 3</button>
 <button onclick="openDay(4)">Dia 4</button>
 <button onclick="openDay(5)">Dia 5</button>
-<button onclick="showPage('dias')">Días</button>
-<button onclick="showPage('progreso')">Progreso</button>
+<button onclick="openDias()">Días</button>
+<button onclick="openProgreso()">Progreso</button>
 </div>
 
 <!-- DIA -->
@@ -112,13 +127,11 @@ input{
 <button onclick="showPage('menu')">Volver</button>
 </div>
 
-<!-- DIAS GUARDADOS -->
+<!-- HISTORIAL -->
 <div id="dias" class="page">
 <h2>Días registrados</h2>
 <div id="daysList"></div>
-
 <div id="dayDetail" class="detailBox" style="display:none"></div>
-
 <button onclick="showPage('menu')">Volver</button>
 </div>
 
@@ -137,36 +150,48 @@ input{
 let currentProfile=null;
 let currentDay=null;
 
+/* RUTINAS */
 const routines={
-1:["Press inclinado con mancuernas","Fondos en paralelas","Aperturas con mancuernas","Press cerrado","Extensión tríceps polea"],
-2:["Dominadas","Remo con barra","Jalón al pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
-3:["Sentadilla libre","Prensa","Curl femoral","Extensión cuádriceps","Gemelos de pie"],
-4:["Press militar","Elevaciones laterales","Elevaciones posteriores","Encogimientos barra","Crunch con peso"],
+1:["Press inclinado mancuernas","Fondos paralelas","Aperturas mancuernas","Press cerrado","Extensión tríceps polea"],
+2:["Dominadas","Remo barra","Jalón pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
+3:["Sentadilla libre","Prensa","Curl femoral","Extensión cuádriceps","Gemelos pie"],
+4:["Press militar","Elevaciones laterales","Elevaciones posteriores","Encogimientos barra","Crunch peso"],
 5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión superserie"]
 };
 
+/* NAVEGACION APP */
 function showPage(id){
-document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.querySelectorAll(".page").forEach(p=>{
+p.classList.remove("active");
+p.scrollTop=0;
+});
 document.getElementById(id).classList.add("active");
+window.scrollTo(0,0);
 }
 
+/* PERFIL */
 function selectProfile(name){
 currentProfile=name;
 updateStreak();
 showPage("menu");
 }
 
+/* STORAGE */
 function getData(){
-return JSON.parse(localStorage.getItem("gymData_"+currentProfile)||"[]");
+return JSON.parse(localStorage.getItem("gym_"+currentProfile)||"[]");
 }
 
 function saveData(data){
-localStorage.setItem("gymData_"+currentProfile,JSON.stringify(data));
+localStorage.setItem("gym_"+currentProfile,JSON.stringify(data));
 }
 
+/* ABRIR DIA */
 function openDay(n){
 currentDay=n;
-document.getElementById("dayTitle").innerText=`Dia ${n} ${new Date().toLocaleDateString()}`;
+
+document.getElementById("dayTitle").innerText=
+`Dia ${n} ${new Date().toLocaleDateString()}`;
+
 const list=document.getElementById("exerciseList");
 list.innerHTML="";
 
@@ -181,43 +206,55 @@ list.innerHTML+=`
 showPage("dayPage");
 }
 
+/* GUARDAR DIA */
 function saveDay(){
-const date=new Date().toLocaleDateString();
-let exercises=[];
+const data=getData();
 
-routines[currentDay].forEach((ex,i)=>{
-exercises.push({
+const exercises=routines[currentDay].map((ex,i)=>({
 name:ex,
-kg:document.getElementById("kg"+i).value,
-reps:document.getElementById("rep"+i).value
-});
+kg:document.getElementById("kg"+i).value||0,
+reps:document.getElementById("rep"+i).value||0
+}));
+
+data.push({
+day:currentDay,
+date:new Date().toLocaleDateString(),
+exercises
 });
 
-let data=getData();
-data.push({day:currentDay,date,exercises});
 saveData(data);
-
 updateStreak();
+
 alert("Guardado ✅");
 showPage("menu");
 }
 
+/* RACHA */
 function updateStreak(){
 const data=getData();
 document.getElementById("streak").innerText="🔥 "+data.length;
 }
 
+/* DIAS */
+function openDias(){
+loadDays();
+showPage("dias");
+}
+
 function loadDays(){
 const container=document.getElementById("daysList");
 container.innerHTML="";
+document.getElementById("dayDetail").style.display="none";
+
 const data=getData();
 
 data.forEach((d,index)=>{
-const div=document.createElement("div");
-div.className="dayCard";
-div.innerHTML=`Dia ${d.day} - ${d.date}`;
 
-div.onclick=()=>showDetail(d);
+const card=document.createElement("div");
+card.className="dayCard";
+card.innerHTML=`Dia ${d.day} - ${d.date}`;
+
+card.onclick=()=>showDetail(d);
 
 const del=document.createElement("button");
 del.className="deleteBtn";
@@ -230,40 +267,52 @@ loadDays();
 updateStreak();
 };
 
-div.appendChild(del);
-container.appendChild(div);
+card.appendChild(del);
+container.appendChild(card);
 });
 }
 
+/* VER DETALLE */
 function showDetail(d){
 const box=document.getElementById("dayDetail");
 box.style.display="block";
 
 let html=`<h3>Dia ${d.day} - ${d.date}</h3>`;
 d.exercises.forEach(ex=>{
-html+=`<p>${ex.name} — ${ex.kg||0} KG / ${ex.reps||0} reps</p>`;
+html+=`<p>${ex.name} — ${ex.kg} KG / ${ex.reps} reps</p>`;
 });
 
 box.innerHTML=html;
 }
 
+/* PROGRESO */
+let chart=null;
+
+function openProgreso(){
+drawChart();
+showPage("progreso");
+}
+
 function drawChart(){
 const data=getData();
+
 const labels=data.map(d=>d.date);
 const values=data.map((_,i)=>i+1);
 
-new Chart(document.getElementById("chart"),{
+if(chart) chart.destroy();
+
+chart=new Chart(document.getElementById("chart"),{
 type:"line",
 data:{
-labels:labels,
-datasets:[{label:"Entrenamientos",data:values}]
+labels,
+datasets:[{
+label:"Entrenamientos",
+data:values
+}]
 },
 options:{responsive:true}
 });
 }
-
-document.getElementById("dias").addEventListener("click",loadDays);
-document.getElementById("progreso").addEventListener("click",drawChart);
 </script>
 
 </body>
