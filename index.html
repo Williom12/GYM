@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GYM</title>
 
-<link rel="manifest" href="manifest.json">
-
 <style>
 *{box-sizing:border-box;}
 
@@ -26,7 +24,6 @@ body{
   position:relative;
 }
 
-/* PAGINAS */
 .page{
   position:absolute;
   top:0;
@@ -55,12 +52,18 @@ button{
 }
 
 input{
-  width:65px;
+  width:70px;
   background:#111;
   color:#fff;
   border:1px solid #333;
   border-radius:6px;
   text-align:center;
+}
+
+input[type="date"]{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
 }
 
 .topbar{
@@ -122,7 +125,11 @@ input{
 <!-- DIA -->
 <div id="dayPage" class="page">
 <h2 id="dayTitle"></h2>
+
+<input type="date" id="dayDate">
+
 <div id="exerciseList"></div>
+
 <button onclick="saveDay()">Guardar Día</button>
 <button onclick="showPage('menu')">Volver</button>
 </div>
@@ -150,7 +157,6 @@ input{
 let currentProfile=null;
 let currentDay=null;
 
-/* RUTINAS */
 const routines={
 1:["Press inclinado mancuernas","Fondos paralelas","Aperturas mancuernas","Press cerrado","Extensión tríceps polea"],
 2:["Dominadas","Remo barra","Jalón pecho","Peso muerto rumano","Curl barra","Curl inclinado"],
@@ -159,7 +165,6 @@ const routines={
 5:["Press banca","Dominadas","Remo mancuerna","Curl + Extensión superserie"]
 };
 
-/* NAVEGACION APP */
 function showPage(id){
 document.querySelectorAll(".page").forEach(p=>{
 p.classList.remove("active");
@@ -169,14 +174,12 @@ document.getElementById(id).classList.add("active");
 window.scrollTo(0,0);
 }
 
-/* PERFIL */
 function selectProfile(name){
 currentProfile=name;
 updateStreak();
 showPage("menu");
 }
 
-/* STORAGE */
 function getData(){
 return JSON.parse(localStorage.getItem("gym_"+currentProfile)||"[]");
 }
@@ -189,8 +192,10 @@ localStorage.setItem("gym_"+currentProfile,JSON.stringify(data));
 function openDay(n){
 currentDay=n;
 
-document.getElementById("dayTitle").innerText=
-`Dia ${n} ${new Date().toLocaleDateString()}`;
+const today=new Date().toISOString().split("T")[0];
+document.getElementById("dayDate").value=today;
+
+updateDayTitle();
 
 const list=document.getElementById("exerciseList");
 list.innerHTML="";
@@ -206,9 +211,17 @@ list.innerHTML+=`
 showPage("dayPage");
 }
 
-/* GUARDAR DIA */
+document.getElementById("dayDate").addEventListener("change",updateDayTitle);
+
+function updateDayTitle(){
+const date=document.getElementById("dayDate").value;
+document.getElementById("dayTitle").innerText=`Dia ${currentDay} ${date}`;
+}
+
+/* GUARDAR */
 function saveDay(){
-const data=getData();
+
+const selectedDate=document.getElementById("dayDate").value;
 
 const exercises=routines[currentDay].map((ex,i)=>({
 name:ex,
@@ -216,9 +229,11 @@ kg:document.getElementById("kg"+i).value||0,
 reps:document.getElementById("rep"+i).value||0
 }));
 
+const data=getData();
+
 data.push({
 day:currentDay,
-date:new Date().toLocaleDateString(),
+date:selectedDate,
 exercises
 });
 
@@ -249,7 +264,6 @@ document.getElementById("dayDetail").style.display="none";
 const data=getData();
 
 data.forEach((d,index)=>{
-
 const card=document.createElement("div");
 card.className="dayCard";
 card.innerHTML=`Dia ${d.day} - ${d.date}`;
@@ -272,7 +286,7 @@ container.appendChild(card);
 });
 }
 
-/* VER DETALLE */
+/* DETALLE */
 function showDetail(d){
 const box=document.getElementById("dayDetail");
 box.style.display="block";
