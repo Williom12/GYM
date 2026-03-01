@@ -72,6 +72,8 @@ input[type="date"]{
   align-items:center;
 }
 
+.streak{font-size:18px;}
+
 .dayCard{
   background:#111;
   padding:12px;
@@ -123,8 +125,11 @@ input[type="date"]{
 <!-- DIA -->
 <div id="dayPage" class="page">
 <h2 id="dayTitle"></h2>
+
 <input type="date" id="dayDate">
+
 <div id="exerciseList"></div>
+
 <button onclick="saveDay()">Guardar Día</button>
 <button onclick="showPage('menu')">Volver</button>
 </div>
@@ -147,37 +152,6 @@ input[type="date"]{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- 🔥 FIREBASE -->
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDE63KkdHA69nKOsguV4HHHpev74U4EGpg",
-  authDomain: "gym-e61c4.firebaseapp.com",
-  projectId: "gym-e61c4",
-  storageBucket: "gym-e61c4.firebasestorage.app",
-  messagingSenderId: "613694978439",
-  appId: "1:613694978439:web:0c370ef36bcec8329a7b22",
-  measurementId: "G-TY04V158X7"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.db=db;
-window.fb={collection,addDoc,getDocs,deleteDoc,doc};
-
-</script>
 
 <script>
 let currentProfile=null;
@@ -206,12 +180,12 @@ updateStreak();
 showPage("menu");
 }
 
-/* 🔥 DATA DESDE FIREBASE */
-async function getData(){
-const snap=await fb.getDocs(fb.collection(db,"workouts"));
-let data=[];
-snap.forEach(d=>data.push({...d.data(),id:d.id}));
-return data.filter(d=>d.profile===currentProfile);
+function getData(){
+return JSON.parse(localStorage.getItem("gym_"+currentProfile)||"[]");
+}
+
+function saveData(data){
+localStorage.setItem("gym_"+currentProfile,JSON.stringify(data));
 }
 
 /* ABRIR DIA */
@@ -219,30 +193,35 @@ function openDay(n){
 currentDay=n;
 
 const today=new Date().toISOString().split("T")[0];
-dayDate.value=today;
+document.getElementById("dayDate").value=today;
+
 updateDayTitle();
 
-exerciseList.innerHTML="";
+const list=document.getElementById("exerciseList");
+list.innerHTML="";
 
 routines[n].forEach((ex,i)=>{
-exerciseList.innerHTML+=`
+list.innerHTML+=`
 <p>${ex}
-KG <input id="kg${i}">
-Reps <input id="rep${i}">
+ KG <input id="kg${i}">
+ Reps <input id="rep${i}">
 </p>`;
 });
 
 showPage("dayPage");
 }
 
-dayDate.addEventListener("change",updateDayTitle);
+document.getElementById("dayDate").addEventListener("change",updateDayTitle);
 
 function updateDayTitle(){
-dayTitle.innerText=`Dia ${currentDay} ${dayDate.value}`;
+const date=document.getElementById("dayDate").value;
+document.getElementById("dayTitle").innerText=`Dia ${currentDay} ${date}`;
 }
 
-/* GUARDAR NUBE */
-async function saveDay(){
+/* GUARDAR */
+function saveDay(){
+
+const selectedDate=document.getElementById("dayDate").value;
 
 const exercises=routines[currentDay].map((ex,i)=>({
 name:ex,
@@ -250,41 +229,41 @@ kg:document.getElementById("kg"+i).value||0,
 reps:document.getElementById("rep"+i).value||0
 }));
 
-await fb.addDoc(
-fb.collection(db,"workouts"),
-{
-profile:currentProfile,
+const data=getData();
+
+data.push({
 day:currentDay,
-date:dayDate.value,
+date:selectedDate,
 exercises
 });
 
+saveData(data);
 updateStreak();
-alert("Guardado en la nube ☁️✅");
+
+alert("Guardado ✅");
 showPage("menu");
 }
 
 /* RACHA */
-async function updateStreak(){
-const data=await getData();
-streak.innerText="🔥 "+data.length;
+function updateStreak(){
+const data=getData();
+document.getElementById("streak").innerText="🔥 "+data.length;
 }
 
 /* DIAS */
-async function openDias(){
-await loadDays();
+function openDias(){
+loadDays();
 showPage("dias");
 }
 
-async function loadDays(){
+function loadDays(){
+const container=document.getElementById("daysList");
+container.innerHTML="";
+document.getElementById("dayDetail").style.display="none";
 
-daysList.innerHTML="";
-dayDetail.style.display="none";
+const data=getData();
 
-const data=await getData();
-
-data.forEach(d=>{
-
+data.forEach((d,index)=>{
 const card=document.createElement("div");
 card.className="dayCard";
 card.innerHTML=`Dia ${d.day} - ${d.date}`;
@@ -294,48 +273,49 @@ card.onclick=()=>showDetail(d);
 const del=document.createElement("button");
 del.className="deleteBtn";
 del.innerText="Eliminar";
-del.onclick=async(e)=>{
+del.onclick=(e)=>{
 e.stopPropagation();
-await fb.deleteDoc(fb.doc(db,"workouts",d.id));
+data.splice(index,1);
+saveData(data);
 loadDays();
 updateStreak();
 };
 
 card.appendChild(del);
-daysList.appendChild(card);
+container.appendChild(card);
 });
 }
 
 /* DETALLE */
 function showDetail(d){
-dayDetail.style.display="block";
+const box=document.getElementById("dayDetail");
+box.style.display="block";
 
 let html=`<h3>Dia ${d.day} - ${d.date}</h3>`;
 d.exercises.forEach(ex=>{
 html+=`<p>${ex.name} — ${ex.kg} KG / ${ex.reps} reps</p>`;
 });
 
-dayDetail.innerHTML=html;
+box.innerHTML=html;
 }
 
 /* PROGRESO */
 let chart=null;
 
-async function openProgreso(){
-await drawChart();
+function openProgreso(){
+drawChart();
 showPage("progreso");
 }
 
-async function drawChart(){
-
-const data=await getData();
+function drawChart(){
+const data=getData();
 
 const labels=data.map(d=>d.date);
 const values=data.map((_,i)=>i+1);
 
 if(chart) chart.destroy();
 
-chart=new Chart(chart,{
+chart=new Chart(document.getElementById("chart"),{
 type:"line",
 data:{
 labels,
